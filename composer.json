@@ -1,0 +1,20 @@
+{
+    "name": "fuwa/xlsx-read",
+    "description": "read big xlsx",
+    "homepage": "https://github.com/prewk/xml-string-streamer",
+    "license": "MIT",
+    "require-dev": {
+        "prewk/xml-string-streamer": "^0.11.0"
+    },
+    "authors": [
+        {
+            "name": "fuwa",
+            "email": "764010982@qq.com"
+        }
+    ],
+    "autoload": {
+        "psr-4": {
+            "Fuwa\\": "src/"
+        }
+    }
+}
