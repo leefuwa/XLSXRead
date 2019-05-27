@@ -91,7 +91,7 @@ class XLSXRead{
     private function setSheetName() {
         $aData = $this->xmlToArray($this->sDir . '/xl/workbook.xml');
         foreach ($aData['sheets']['sheet'] as $_k => $_v) {
-            $this->aSheetName[$_v[$this->sAttributesName]['name']] = 'sheet' . ($_k + 1);
+            $this->aSheetName[isset($_v['name']) ? $_v['name'] : $_v[$this->sAttributesName]['name']] = 'sheet' . ($_k + 1);
         }
         unset($aData);
     }
@@ -187,6 +187,7 @@ class XLSXRead{
                 }
 
                 if ($oCallBack = $this->oCallback){
+                    $aCon['sheet'] = $_k;
                     $flag = $oCallBack($aContent, $row, $aCon); // call_user_func
 
                     if ($flag === false){
