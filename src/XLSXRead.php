@@ -101,7 +101,7 @@ class XLSXRead{
     private function setTitle(){
         foreach ($this->aReadSheet as $_v){
             $this->aSheet[$_v]['sXmlPath']     = $this->sDir . '/xl/worksheets/' . $this->aSheetName[$_v] . '.xml';
-            $this->aSheet[$_v]['sNoteXmlPath'] = $this->aSheet[$_v]['sSheetPath'] . '.xml';
+            $this->aSheet[$_v]['sNoteXmlPath'] = $this->aSheet[$_v]['sXmlPath'] . '.xml';
             $streamer = \Prewk\XmlStringStreamer::createStringWalkerParser($this->aSheet[$_v]['sXmlPath']);
             while ($node = $streamer->getNode()) {
                 if (strpos(trim($node), '<sheetData>') === 0) {
@@ -130,9 +130,10 @@ class XLSXRead{
                 foreach ($node['c'] as $_cv) {
                     $srow = $_cv[$this->sAttributesName]['r'];
 
-                    if (!isset($_cv['v'])) continue;
+                    if (!isset($_cv['v']) && !isset($_cv['is']['t'])) continue;
+                    $_cv['v'] = isset($_cv['v']) ? $_cv['v'] : $_cv['is']['t'];
 
-                    $sContent = isset($_cv[$this->sAttributesName]['t']) ? $this->getStrings($_cv['v']) : $_cv['v'];
+                    $sContent = isset($_cv[$this->sAttributesName]['t']) && !isset($_cv['is']) ? $this->getStrings($_cv['v']) : $_cv['v'];
 
                     $this->aSheetTitle[$_v][rtrim($srow, $row)] = $sContent;
                 }
@@ -178,10 +179,11 @@ class XLSXRead{
                     $srow    = $_nodev[$this->sAttributesName]['r'];
                     $rowname = rtrim($srow, $row);
 
-                    if ((!isset($_nodev['v']) || ($this->bReadKey && !array_key_exists($rowname,$_v))) && ($this->bReadKey && !array_key_exists($rowname,$_v)))
+                    if (((!isset($_nodev['v']) && !isset($_nodev['is']['t'])) || ($this->bReadKey && !array_key_exists($rowname,$_v))) && ($this->bReadKey && !array_key_exists($rowname,$_v)))
                         continue;
 
-                    $aContent[$this->bReadKey ? $_v[$rowname] : $rowname] = isset($_nodev[$this->sAttributesName]['t']) ? $this->getStrings($_nodev['v']) : $this->getFormat($_nodev, $this->bReadKey ? $_v[$rowname] : false);
+                    $_nodev['v'] = isset($_nodev['v']) ? $_nodev['v'] : $_nodev['is']['t'] ?: '';
+                    $aContent[$this->bReadKey ? $_v[$rowname] : $rowname] = isset($_nodev[$this->sAttributesName]['t']) && !isset($_nodev['is']) ? $this->getStrings($_nodev['v']) : $this->getFormat($_nodev, $this->bReadKey ? $_v[$rowname] : false);
                 }
 
                 if ($oCallBack = $this->oCallback){
