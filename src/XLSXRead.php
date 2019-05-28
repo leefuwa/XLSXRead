@@ -68,10 +68,19 @@ class XLSXRead{
 
 
         $zip = new \ZipArchive();
-        $zip->open($this->sPath);
-        $zip->extractTo($this->sDir);
+        if ($zip->open($this->sPath) === true) {
+            for ($i = 0; $i < $zip->numFiles; $i++) {
+                $filename = $zip->getNameIndex($i);
+                $fileinfo = pathinfo($filename);
+                if (!is_dir($this->sDir . '/' . $fileinfo['dirname'])) {
+                    @mkdir($this->sDir . '/' . $fileinfo['dirname'], 0777);
+                }
+                copy("zip://" . $this->sPath . "#" . $filename, $this->sDir . '/' . $filename);
+            }
+            $zip->close();
+        }
 
-        if (!$this->error(!is_file($this->sDir . '/xl/workbook.xml'), '只支持Xlsx 2007')) {
+        if (!$this->error(!is_file($this->sDir . '/xl/workbook.xml'), '只支持Xlsx-2007')) {
             return false;
         }
 
