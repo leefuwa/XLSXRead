@@ -73,7 +73,7 @@ class XLSXRead{
                 $filename = $zip->getNameIndex($i);
                 $fileinfo = pathinfo($filename);
                 if (!is_dir($this->sDir . '/' . $fileinfo['dirname'])) {
-                    @mkdir($this->sDir . '/' . $fileinfo['dirname'], 0777);
+                    @mkdir($this->sDir . '/' . $fileinfo['dirname'], 0777, true);
                 }
                 copy("zip://" . $this->sPath . "#" . $filename, $this->sDir . '/' . $filename);
             }
