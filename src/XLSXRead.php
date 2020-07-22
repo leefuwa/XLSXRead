@@ -28,12 +28,22 @@ class XLSXRead{
     private $iTitleRows = 1; // 多重标题头,一般为1
     private $aSheetTitle = [];
     private $aTitleSheet = [];
+    private $originTitle = [];//原始表头
 
     private $aConfig = []; // 调用者的配置文件
 
     public function __construct() {
         $this->bError = true;
     }
+
+    /**
+     * @return array
+     */
+    public function getOriginTitle()
+    {
+        return $this->originTitle;
+    }
+
 
     public function read($_aConfig) {
         $this->setConfig($_aConfig);
@@ -110,6 +120,10 @@ class XLSXRead{
     private function setTitle(){
         foreach ($this->aReadSheet as $_v){
             $this->aSheet[$_v]['sXmlPath']     = $this->sDir . '/xl/worksheets/' . $this->aSheetName[$_v] . '.xml';
+            if (!is_file($this->aSheet[$_v]['sXmlPath'])) {
+                $this->error(true, "【{$_v}】不存在！");
+                return false;
+            }
             $this->aSheet[$_v]['sNoteXmlPath'] = $this->aSheet[$_v]['sXmlPath'] . '.xml';
             $streamer = \Prewk\XmlStringStreamer::createStringWalkerParser($this->aSheet[$_v]['sXmlPath']);
             while ($node = $streamer->getNode()) {
@@ -143,8 +157,11 @@ class XLSXRead{
                     $_cv['v'] = isset($_cv['v']) ? $_cv['v'] : $_cv['is']['t'];
 
                     $sContent = isset($_cv[$this->sAttributesName]['t']) && !isset($_cv['is']) ? $this->getStrings($_cv['v']) : $_cv['v'];
+                    $sContent = str_replace(PHP_EOL, '', $sContent);
 
                     $this->aSheetTitle[$_v][rtrim($srow, $row)] = $sContent;
+
+                    $this->originTitle[$_v][rtrim($srow, $row)] = $sContent;//存放原始表头
                 }
             }
 
@@ -184,6 +201,7 @@ class XLSXRead{
                 $row = $node[$this->sAttributesName]['r'];
                 $aContent = [];
 
+                $node['c'] = isset($node['c'][$this->sAttributesName]) ? [$node['c']] : $node['c'];
                 foreach ($node['c'] as $_nodev) {
                     $srow    = $_nodev[$this->sAttributesName]['r'];
                     $rowname = rtrim($srow, $row);
@@ -192,7 +210,7 @@ class XLSXRead{
                         continue;
 
                     $_nodev['v'] = isset($_nodev['v']) ? $_nodev['v'] : $_nodev['is']['t'] ?: '';
-                    $aContent[$this->bReadKey ? $_v[$rowname] : $rowname] = isset($_nodev[$this->sAttributesName]['t']) && !isset($_nodev['is']) ? $this->getStrings($_nodev['v']) : $this->getFormat($_nodev, $this->bReadKey ? $_v[$rowname] : false);
+                    $aContent[$this->bReadKey ? $_v[$rowname] : $rowname] = isset($_nodev[$this->sAttributesName]['t']) && !isset($_nodev['is']) ? ($this->getStrings($_nodev['v']) === NULL ? $_nodev['v'] : $this->getStrings($_nodev['v'])) : $this->getFormat($_nodev, $this->bReadKey ? $_v[$rowname] : false);
                 }
 
                 if ($oCallBack = $this->oCallback){
